@@ -3,15 +3,18 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
+import java.time.LocalDateTime;
+import java.time.chrono.JapaneseDate;
 import java.util.ArrayList;
 import javax.swing.table.DefaultTableModel;
 
 public class SampleApp {
     //Initializing Components
+    private int quantity;
     private JFrame f,f2,createUserFrame,LoginFrame,editUserFrame,deleteUserFrame,editUserInterfaceFrame;
     private JPanel dataEntry,dataList,footer;
     private JLabel idLabel,nameLabel,rateLabel,quantityLabel,expiryLabel,salableLabel,customerLabel,customerNameLabel,customerPANLabel,usernameLabel,userAddressLabel,userContactLabel,userPasswordLabel,userconfirmPasswordLabel;
-    private JTextField nameInput,rateInput,idInput,quantityInput,expiryInput,customerNameInput,customerPANInput,userNameInput,userAddressInput,userContactInput;
+    private JTextField nameInput,rateInput,idInput,quantityInput,expiryInput,customerNameInput,customerPANInput,userNameInput,userAddressInput,userContactInput,customerNameInput1,customerPANInput1;
     private JPasswordField userPasswordInput,userPasswordInput2;
     private JRadioButton maleBtn,femaleBtn,unspecifiedBtn;
     private ButtonGroup bg;
@@ -23,6 +26,9 @@ public class SampleApp {
     private DefaultTableModel infoTableModel;
     private ArrayList<Model> ModelList=new ArrayList<Model>();
     private boolean loginStatus=false;
+    private JComboBox yearCombo,monthCombo,dayCombo,panNoCombo;
+    private JRadioButton alreadyUser,newUser;
+
     //Constructor
     SampleApp(){
         Login();
@@ -118,21 +124,58 @@ public class SampleApp {
         expiryLabel=new JLabel("Expiry Date");
         expiryLabel.setBounds(20 + insets.left, 200 + insets.top, expiryLabel.getPreferredSize().width+25, expiryLabel.getPreferredSize().height);
         dataEntry.add(expiryLabel);
-        expiryInput=new JTextField();
-        expiryInput.setBounds(100 + insets.left, 200 + insets.top, expiryInput.getPreferredSize().width+75, expiryInput.getPreferredSize().height);
-        dataEntry.add(expiryInput);
+
+        int year=(LocalDateTime.now().getYear());
+        Integer years[]=new Integer[10];
+        years[0]=year;
+        for(int y=1;y<10;y++){
+            years[y]=year+1;
+            year=year+1;
+        }
+        yearCombo=new JComboBox(years);
+        yearCombo.setBounds(100+insets.left,200+insets.top,yearCombo.getPreferredSize().width+20,yearCombo.getPreferredSize().height);
+        dataEntry.add(yearCombo);
+
+
+        String months[]=new String[12];
+        for(int m=1;m<=12;m++){
+            if(m<10){
+                months[m-1]="0"+Integer.toString(m);
+            }else{
+                months[m-1]=Integer.toString(m);
+            }
+        }
+        monthCombo=new JComboBox(months);
+        monthCombo.setBounds(180+insets.left,200+insets.top,monthCombo.getPreferredSize().width+20,monthCombo.getPreferredSize().height);
+        dataEntry.add(monthCombo);
+
+
+        String days[]=new String[30];
+        for(int d=1;d<=30;d++){
+            if(d<10){
+                days[d-1]="0"+Integer.toString(d);
+            }else{
+                days[d-1]=Integer.toString(d);
+            }
+        }
+        dayCombo=new JComboBox(days);
+        dayCombo.setBounds(240+insets.left,200+insets.top,dayCombo.getPreferredSize().width+20,dayCombo.getPreferredSize().height);
+        dataEntry.add(dayCombo);
+
+
         //Quantity Field Ends
         //Salable Field Starts
         salableLabel=new JLabel("Is Salable");
-        salableLabel.setBounds(200 + insets.left, 200 + insets.top, salableLabel.getPreferredSize().width, salableLabel.getPreferredSize().height);
+        salableLabel.setBounds(320 + insets.left, 200 + insets.top, salableLabel.getPreferredSize().width, salableLabel.getPreferredSize().height);
         dataEntry.add(salableLabel);
 
         String flags[]={"Yes","No"};
         yesNo=new JComboBox(flags);
-        yesNo.setBounds(270 + insets.left, 200 + insets.top, yesNo.getPreferredSize().width+20, yesNo.getPreferredSize().height);
+        yesNo.setBounds(390 + insets.left, 200 + insets.top, yesNo.getPreferredSize().width+20, yesNo.getPreferredSize().height);
         dataEntry.add(yesNo);
-        //Covid-19 Field Ends
         //Add to Cart Field Starts
+
+
 
         addToCartBtn=new JButton("Add To Cart");
         addToCartBtn.setBounds(270+insets.left,250+insets.top,addToCartBtn.getPreferredSize().width,addToCartBtn.getPreferredSize().height);
@@ -168,9 +211,30 @@ public class SampleApp {
         //Get Data Button Field Ends
         //Customer Starts
         //customerLabel,customerNameLabel,customerPANLabel
+
         customerLabel=new JLabel("Customer Details");
         customerLabel.setBounds(20+insets.left,300+insets.top,customerLabel.getPreferredSize().width,customerLabel.getPreferredSize().height);
         dataEntry.add(customerLabel);
+
+        alreadyUser=new JRadioButton("Already a Customer ?");
+        alreadyUser.setBounds(150+insets.left,300+insets.top,alreadyUser.getPreferredSize().width,alreadyUser.getPreferredSize().height);
+        dataEntry.add(alreadyUser);
+
+        newUser=new JRadioButton("New Customer ?");
+        newUser.setBounds(300+insets.left,300+insets.top,newUser.getPreferredSize().width,newUser.getPreferredSize().height);
+        dataEntry.add(newUser);
+
+        bg=new ButtonGroup();
+        bg.add(alreadyUser);
+        bg.add(newUser);
+
+        if(alreadyUser.isSelected()){
+            customerNameInput1.setEditable(false);
+        }else if(newUser.isSelected()){
+
+        }
+
+
         customerNameLabel=new JLabel("Customer Name");
         customerNameLabel.setBounds(20+insets.left,350+insets.top,customerNameLabel.getPreferredSize().width,customerNameLabel.getPreferredSize().height);
         dataEntry.add(customerNameLabel);
@@ -185,13 +249,37 @@ public class SampleApp {
 
         customerPANInput=new JTextField();
         customerPANInput.setBounds(280+insets.left,350+insets.top,customerPANInput.getPreferredSize().width+100,customerPANInput.getPreferredSize().height);
-        dataEntry.add(customerPANInput);
+//        dataEntry.add(customerPANInput);
+
+        String Pannos[]={"A","B"};
+        panNoCombo=new JComboBox(Pannos);
+        panNoCombo.setBounds(280+insets.left,350+insets.top,panNoCombo.getPreferredSize().width+100,panNoCombo.getPreferredSize().height);
+        dataEntry.add(panNoCombo);
+
+        customerLabel=new JLabel("New Customer Details");
+        customerLabel.setBounds(20+insets.left,400+insets.top,customerLabel.getPreferredSize().width,customerLabel.getPreferredSize().height);
+        dataEntry.add(customerLabel);
+        customerNameLabel=new JLabel("Customer Name");
+        customerNameLabel.setBounds(20+insets.left,450+insets.top,customerNameLabel.getPreferredSize().width,customerNameLabel.getPreferredSize().height);
+        dataEntry.add(customerNameLabel);
+
+        customerNameInput=new JTextField();
+        customerNameInput.setBounds(120+insets.left,450+insets.top,customerNameInput.getPreferredSize().width+100,customerNameInput.getPreferredSize().height);
+        dataEntry.add(customerNameInput);
+
+        customerPANLabel=new JLabel("PAN NO : ");
+        customerPANLabel.setBounds(230+insets.left,450+insets.top,customerPANLabel.getPreferredSize().width,customerPANLabel.getPreferredSize().height);
+        dataEntry.add(customerPANLabel);
+
+        customerPANInput1=new JTextField();
+        customerPANInput1.setBounds(280+insets.left,450+insets.top,customerPANInput.getPreferredSize().width+100,customerPANInput.getPreferredSize().height);
+        dataEntry.add(customerPANInput1);
         //Customer Ends
 
         //Generate Bill Btn Starts
 
         generateBillBtn=new JButton("Generate Bill");
-        generateBillBtn.setBounds(270+insets.left,400+insets.top,generateBillBtn.getPreferredSize().width,generateBillBtn.getPreferredSize().height);
+        generateBillBtn.setBounds(270+insets.left,500+insets.top,generateBillBtn.getPreferredSize().width,generateBillBtn.getPreferredSize().height);
         dataEntry.add(generateBillBtn);
         generateBillBtn.addActionListener(new ActionListener() {
             @Override
@@ -211,13 +299,21 @@ public class SampleApp {
             int id=Integer.parseInt(idInput.getText());
             String name=nameInput.getText();
             int rate=Integer.parseInt(rateInput.getText());
-            int quantity=Integer.parseInt(quantityInput.getText());
-            String expiry_date=expiryInput.getText();
+            int quantityInp=Integer.parseInt(quantityInput.getText());
+            String expiryYear=new String(yearCombo.getSelectedItem().toString());
+            String expiry_month=new String(monthCombo.getSelectedItem().toString());
+            String expiry_day=new String(dayCombo.getSelectedItem().toString());
+            String expiry_date=expiryYear+"-"+expiry_month+"-"+expiry_day;
             String salableStatus=yesNo.getSelectedItem().toString();
-            Model m1=new Model(id,rate,quantity,name,expiry_date,salableStatus);
-            ModelList.add(m1);
-            updateTable();
-            setClearBtn();
+            if(quantityInp>quantity) {
+                JOptionPane.showMessageDialog(f, "Sufficient Quantity Not Available");
+            }else {
+                Model m1 = new Model(id, rate, quantityInp, name, expiry_date, salableStatus);
+                ModelList.add(m1);
+                updateTable();
+                setClearBtn();
+                quantity=quantity-quantityInp;
+            }
         }else {
             JOptionPane.showMessageDialog(null,"Something went wrong!! ");
         }
@@ -225,6 +321,7 @@ public class SampleApp {
     void removeFromCartFunction(){
         int id=Integer.parseInt(idInput.getText());
         try {
+            quantity=quantity+ModelList.get(id).getQuantity();
             ModelList.remove(id-1);
             updateTable();
             setClearBtn();
@@ -244,8 +341,29 @@ public class SampleApp {
                 idInput.setText(String.valueOf(m1.getId()));
                 nameInput.setText(m1.getName());
                 rateInput.setText(String.valueOf(m1.getRate()));
-                //quantityInput.setText(String.valueOf(m1.getQuantity()));
-                expiryInput.setText(m1.getExpiryDate());
+                quantity=m1.getQuantity();
+                int inyear=Integer.parseInt(m1.getExpiryDate().substring(0,4));
+                int inmonth=Integer.parseInt(m1.getExpiryDate().substring(5,7));
+                int inday=Integer.parseInt(m1.getExpiryDate().substring(8,10));
+
+                int year=(LocalDateTime.now().getYear());
+                Integer years[]=new Integer[10];
+                years[0]=year;
+                for(int y=1;y<10;y++){
+                    years[y]=year+1;
+                    year=year+1;
+                }
+                int yearindex=0;
+                for(int j=1;j<10;j++){
+                    if (years[j]==inyear) {
+                        yearindex = j;
+                        break;
+                    }
+                }
+                yearCombo.setSelectedIndex(yearindex);
+                monthCombo.setSelectedIndex(inmonth-1);
+                dayCombo.setSelectedIndex(inday-1);
+
                 int saleStatus = Integer.parseInt(m1.getIs_salable());
                 if (saleStatus == 1) {
                     yesNo.setSelectedIndex(0);
@@ -269,7 +387,7 @@ public class SampleApp {
                     JOptionPane.showMessageDialog(null,"Customer PAN No is Important");
                 }else{
                     db1=new DataBase();
-                    db1.insertTransactionData(customerNameInput.getText(),customerPANInput.getText(),ModelList);
+                    db1.insertTransactionData(customerNameInput.getText(),customerPANInput.getText(),ModelList,quantity);
                     JOptionPane.showMessageDialog(null,"Bill Generation Successfull");
                     ModelList.clear();
                     customerNameInput.setText("");
@@ -443,7 +561,7 @@ public class SampleApp {
             String name=nameInput.getText();
             int rate=Integer.parseInt(rateInput.getText());
             int quantity=Integer.parseInt(quantityInput.getText());
-            String expiry_date=expiryInput.getText();
+            String expiry_date=yearCombo.getSelectedItem().toString()+"-"+monthCombo.getSelectedItem().toString()+"-"+dayCombo.getSelectedItem().toString();
             String salableStatus=yesNo.getSelectedItem().toString();
             System.out.println(salableStatus);
             if(salableStatus.toLowerCase().equals("yes")){
@@ -465,17 +583,8 @@ public class SampleApp {
 
     //This function performs action on Delete Button
     void setDeletebtn(){
-        String id=idInput.getText();
-        if(id.equals("")){
-            JOptionPane.showMessageDialog(null,"Please Select Correct Data");
-        }else {
-            db1 = new DataBase();
-            //db1.deleteData(Integer.parseInt(id));
-            setClearBtn();
-            JOptionPane.showMessageDialog(null, "Row Deleted Successfully ");
-            infoTableModel.setRowCount(0);
-            updateTable();
-        }
+        db1=new DataBase();
+        db1.getAllInventoryData();
     }
     //This function performs action on Clear Button
     void setClearBtn(){
@@ -483,7 +592,9 @@ public class SampleApp {
         rateInput.setText("");
         idInput.setText("");
         quantityInput.setText("");
-        expiryInput.setText("");
+        yearCombo.setSelectedIndex(0);
+        monthCombo.setSelectedIndex(0);
+        dayCombo.setSelectedIndex(0);
         yesNo.setSelectedIndex(0);
     }
     void setUsersBtn(){
@@ -809,10 +920,9 @@ public class SampleApp {
         String name=nameInput.getText();
         String rate=rateInput.getText();
         String quantity=quantityInput.getText();
-        String expiry_date=expiryInput.getText();
         String salableStatus=yesNo.getSelectedItem().toString();
         boolean valid=true;
-        if(name.equals("") || rate.equals("") ||quantity.equals("")||expiry_date.equals("")){
+        if(name.equals("") || rate.equals("") ||quantity.equals("")){
             JOptionPane.showMessageDialog(null, "Field is Required..");
             valid=false;
         }

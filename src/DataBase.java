@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 //Class for DataBase
 public class DataBase {
@@ -148,16 +149,16 @@ public class DataBase {
                     System.out.println("Last Inserted ID = "+rs.getLong(1));
                     id=rs.getLong(1);
                 }
-                conn.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
             return id;
     }
-    void insertTransactionData(String CustomerName,String CustomerPANNumber,ArrayList<Model> ModelList){
+    void insertTransactionData(String CustomerName,String CustomerPANNumber,ArrayList<Model> ModelList,int quantity){
         long id=insertCustomerData(CustomerName,CustomerPANNumber);
         long total;
         String QueryString;
+        String updateString;
         if(id==0){
             JOptionPane.showMessageDialog(null,"Something Went Wrong !!! ");
         }else{
@@ -167,8 +168,10 @@ public class DataBase {
                 total=0;
                 total=ModelList.get(i).getQuantity()*ModelList.get(i).getRate();
                 QueryString="INSERT INTO `transactions` (Customer_id,Product_Name,Quantity,Rate,Total) VALUES ('"+id+"','"+ModelList.get(i).getName()+"','"+ModelList.get(i).getQuantity()+"','"+ModelList.get(i).getRate()+"','"+total+"');";
+                updateString="UPDATE `inventory` SET quantity='"+quantity+"' WHERE ID='"+ModelList.get(i).getId()+"';";
                 try {
                     var i1 = stmt.executeUpdate(QueryString);
+                    var i2=stmt.executeUpdate(updateString);
                 } catch (SQLException throwables) {
                     throwables.printStackTrace();
                 }
@@ -241,5 +244,68 @@ public class DataBase {
             return 0;
         }
     }
-
+    void getAllInventoryData(){
+        ArrayList<InventoryModel> inventoryModels=new ArrayList<>();
+        createConnection();
+        try{
+            String getAllDataQuery="SELECT * FROM `inventory`;";
+            ResultSet rs=stmt.executeQuery(getAllDataQuery);
+            while (rs.next()) {
+                inventoryModels.add(new InventoryModel(rs.getInt(1),rs.getString(2),rs.getInt(3),rs.getInt(4),rs.getString(5),rs.getString(6)));
+                //m1=new Model(rs.getInt(1),rs.getInt(4),rs.getInt(3),rs.getString(2),rs.getString(5),rs.getString(6));
+            }
+            System.out.println("Lists");
+            for(int i=0;i<inventoryModels.size();i++){
+                System.out.println("Id : "+inventoryModels.get(i).getId());
+                System.out.println("Expiry Date : "+inventoryModels.get(i).getExpiry_date());
+            }
+            revoke(inventoryModels);
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+        }
+    }
+    void revoke(ArrayList<InventoryModel> inventoryModels){
+        int year=(LocalDateTime.now().getYear());
+        int month=(LocalDateTime.now().getMonthValue());
+        int day=(LocalDateTime.now().getDayOfMonth());
+        ArrayList<Integer> ids=new ArrayList<>();
+        for(int i=0;i<inventoryModels.size();i++){
+            int inyear=Integer.parseInt(inventoryModels.get(i).getExpiry_date().substring(0,4));
+            int inmonth=Integer.parseInt(inventoryModels.get(i).getExpiry_date().substring(5,7));
+            int inday=Integer.parseInt(inventoryModels.get(i).getExpiry_date().substring(8,10));
+            System.out.println(inyear);
+            System.out.println(inmonth);
+            System.out.println(inday);
+            if(inyear<year){
+                ids.add(inventoryModels.get(i).getId());
+            }else if(inyear==year){
+                if(inmonth<month){
+                    ids.add(inventoryModels.get(i).getId());
+                }else if(month==inmonth){
+                    if(inday<day){
+                        ids.add(inventoryModels.get(i).getId());
+                    }
+                }
+            }
+        }
+        updateInventorySalableItems(ids);
+    }
+    void updateInventorySalableItems(ArrayList<Integer> ids){
+        createConnection();
+        String updateSql;
+        if(!ids.isEmpty()) {
+            try {
+                for (int i = 0; i < ids.size(); i++) {
+                    updateSql = "UPDATE `inventory` SET is_salable=0 WHERE ID='" + ids.get(i) + "';";
+                    stmt.executeUpdate(updateSql);
+                    System.out.println("Update SuccessFull");
+                    JOptionPane.showMessageDialog(null,"Successfully Revoked Expired Items ");
+                }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+        }else{
+            JOptionPane.showMessageDialog(null,"No Expired or Damaged Items to Revoke !!");
+        }
+    }
 }
