@@ -1,8 +1,15 @@
+package Repository;
+
+import Models.CustomerModel;
+import Models.InventoryModel;
+import Models.Model;
+import Models.UserModel;
+
 import javax.swing.*;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-//Class for DataBase
+//Class for Repository.DataBase
 public class DataBase {
     //Initializing Database Credentials
     private String driver="com.mysql.jdbc.Driver";
@@ -14,7 +21,7 @@ public class DataBase {
     Connection conn;
 
     //This Function is for Creating Database If it doesnot Exists
-    void createDatabase(){
+    public void createDatabase(){
         try{
             Class.forName(driver);
             conn=DriverManager.getConnection(db_firsttime_url,db_userName,db_password);
@@ -26,7 +33,7 @@ public class DataBase {
         }
     }
     //This function is for Creating Database Connection for CRUD
-    void createConnection(){
+   public void createConnection(){
         try {
             Class.forName(driver);
             Connection conn = DriverManager.getConnection(db_url, db_userName, db_password);
@@ -36,7 +43,7 @@ public class DataBase {
         }
     }
     //This Function is for Creating Table if it Table on Database doesnot Exists
-    void createTable(){
+   public void createTable(){
         createConnection();
         try {
             stmt.executeUpdate("CREATE TABLE if not exists Users(" +
@@ -73,11 +80,12 @@ public class DataBase {
                     "FOREIGN KEY (Customer_id) REFERENCES Customers(ID),"+
                     "PRIMARY KEY (ID));" +
                     "");
-            stmt.executeUpdate("CREATE TABLE if not exists Transferred(" +
+
+            stmt.executeUpdate("CREATE TABLE if not exists Transfer(" +
                     "ID int Not NULL AUTO_INCREMENT," +
                     "Item_ID int Not Null,"+
-                    "Name varchar(255) Not NULL," +
-                    "FOREIGN KEY (Item_ID) REFERENCES Inventory(ID) ,"+
+                    "Branch varchar(255) Not NULL," +
+                    "Quantity int Not Null ,"+
                     "PRIMARY KEY (ID));" +
                     "");
             conn.close();
@@ -85,7 +93,7 @@ public class DataBase {
             System.out.println(e);
         } }
 
-    int insertUser(String Username,String Address,String Contact,String Password){
+   public int insertUser(String Username,String Address,String Contact,String Password){
         createConnection();
         try{
             String checkUserQuery="SELECT count(*) FROM `users` WHERE Username='"+Username+"';";
@@ -105,7 +113,7 @@ public class DataBase {
         }
     }
 
-    int updateUser(int id,String Username,String Address,String Contact,String Password){
+    public int updateUser(int id,String Username,String Address,String Contact,String Password){
         createConnection();
         try{
             String checkUserQuery="SELECT count(*) FROM `users` WHERE Username='"+Username+"';";
@@ -127,7 +135,7 @@ public class DataBase {
     }
 
     //This function is for Inserting Data In Database
-    void insertInventoryData(String ItemName,int Quantity,int Rate,String Expiry_date,int is_salable){
+    public void insertInventoryData(String ItemName,int Quantity,int Rate,String Expiry_date,int is_salable){
         createConnection();
         try{
             stmt.executeUpdate("INSERT INTO `inventory` (ItemName,Quantity,Rate,Expiry_date,Is_Salable) VALUES ('"+ItemName+"','"+Quantity+"','"+Rate+"','"+Expiry_date+"','"+is_salable+"');");
@@ -136,7 +144,7 @@ public class DataBase {
         }catch (Exception e){
         }
     }
-    long insertCustomerData(String Name,String PANNumber){
+   public long insertCustomerData(String Name,String PANNumber){
         long id=0;
         createConnection();
         //stmt.executeUpdate("INSERT INTO `customers` (Name,PANNumber) VALUES ('"+Name+"','"+PANNumber+"');");
@@ -154,7 +162,7 @@ public class DataBase {
             }
             return id;
     }
-    void insertTransactionData(String CustomerName,String CustomerPANNumber,ArrayList<Model> ModelList,int quantity){
+   public void insertTransactionData(String CustomerName,String CustomerPANNumber,ArrayList<Model> ModelList,int quantity){
         long id=insertCustomerData(CustomerName,CustomerPANNumber);
         long total;
         String QueryString;
@@ -178,8 +186,28 @@ public class DataBase {
             }
         }
     }
+   public void insertTransactionData2(int id,ArrayList<Model> ModelList,int quantity){
+        long total;
+        String QueryString;
+        String updateString;
+            createConnection();
+            for(int i=0;i< ModelList.size();i++){
+                QueryString="";
+                total=0;
+                total=ModelList.get(i).getQuantity()*ModelList.get(i).getRate();
+                QueryString="INSERT INTO `transactions` (Customer_id,Product_Name,Quantity,Rate,Total) VALUES ('"+id+"','"+ModelList.get(i).getName()+"','"+ModelList.get(i).getQuantity()+"','"+ModelList.get(i).getRate()+"','"+total+"');";
+                updateString="UPDATE `inventory` SET quantity='"+quantity+"' WHERE ID='"+ModelList.get(i).getId()+"';";
+                try {
+                    var i1 = stmt.executeUpdate(QueryString);
+                    var i2=stmt.executeUpdate(updateString);
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
+            }
 
-    Model getDataByID(int id) {
+    }
+
+   public Model getDataByID(int id) {
         Model m1 = new Model();
         createConnection();
         try {
@@ -192,14 +220,14 @@ public class DataBase {
                     m1.Name = rs.getString(2);
                     m1.ExpiryDate = rs.getString(5);
                     m1.is_salable = rs.getString(6);
-                    //m1=new Model(rs.getInt(1),rs.getInt(4),rs.getInt(3),rs.getString(2),rs.getString(5),rs.getString(6));
+                    //m1=new Models.Model(rs.getInt(1),rs.getInt(4),rs.getInt(3),rs.getString(2),rs.getString(5),rs.getString(6));
                 }
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(null, "Invalid ID");
             }
             return m1;
     }
-    UserModel getDataByUserName(String UserName) {
+   public UserModel getDataByUserName(String UserName) {
         UserModel m1 = new UserModel();
         createConnection();
         try {
@@ -211,14 +239,14 @@ public class DataBase {
                 m1.Address = rs.getString(3);
                 m1.Contact_No = rs.getString(4);
                 m1.Password = rs.getString(5);
-                //m1=new Model(rs.getInt(1),rs.getInt(4),rs.getInt(3),rs.getString(2),rs.getString(5),rs.getString(6));
+                //m1=new Models.Model(rs.getInt(1),rs.getInt(4),rs.getInt(3),rs.getString(2),rs.getString(5),rs.getString(6));
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(null, "Invalid ID");
         }
         return m1;
     }
-    void DeleteUser(int id){
+   public void DeleteUser(int id){
         createConnection();
         try{
             String sql="DELETE FROM `users` WHERE ID='"+id+"';";
@@ -227,7 +255,7 @@ public class DataBase {
         }catch (Exception e){
         }
     }
-    int loginData(String Username,String Password){
+   public int loginData(String Username,String Password){
         createConnection();
         try{
             String checkUserQuery="SELECT count(*) FROM `users` WHERE Username='"+Username+"' AND Password='"+Password+"';";
@@ -244,7 +272,7 @@ public class DataBase {
             return 0;
         }
     }
-    void getAllInventoryData(){
+    public void getAllInventoryData(){
         ArrayList<InventoryModel> inventoryModels=new ArrayList<>();
         createConnection();
         try{
@@ -252,7 +280,7 @@ public class DataBase {
             ResultSet rs=stmt.executeQuery(getAllDataQuery);
             while (rs.next()) {
                 inventoryModels.add(new InventoryModel(rs.getInt(1),rs.getString(2),rs.getInt(3),rs.getInt(4),rs.getString(5),rs.getString(6)));
-                //m1=new Model(rs.getInt(1),rs.getInt(4),rs.getInt(3),rs.getString(2),rs.getString(5),rs.getString(6));
+                //m1=new Models.Model(rs.getInt(1),rs.getInt(4),rs.getInt(3),rs.getString(2),rs.getString(5),rs.getString(6));
             }
             System.out.println("Lists");
             for(int i=0;i<inventoryModels.size();i++){
@@ -264,7 +292,7 @@ public class DataBase {
             System.out.println(e.getMessage());
         }
     }
-    void revoke(ArrayList<InventoryModel> inventoryModels){
+    public void revoke(ArrayList<InventoryModel> inventoryModels){
         int year=(LocalDateTime.now().getYear());
         int month=(LocalDateTime.now().getMonthValue());
         int day=(LocalDateTime.now().getDayOfMonth());
@@ -290,7 +318,7 @@ public class DataBase {
         }
         updateInventorySalableItems(ids);
     }
-    void updateInventorySalableItems(ArrayList<Integer> ids){
+    public void updateInventorySalableItems(ArrayList<Integer> ids){
         createConnection();
         String updateSql;
         if(!ids.isEmpty()) {
@@ -307,5 +335,37 @@ public class DataBase {
         }else{
             JOptionPane.showMessageDialog(null,"No Expired or Damaged Items to Revoke !!");
         }
+    }
+    public ArrayList<CustomerModel> getCustomersData(){
+        ArrayList<CustomerModel> customerModels=new ArrayList<>();
+        createConnection();
+        try{
+            String getAllDataQuery="SELECT * FROM `customers`;";
+            ResultSet rs=stmt.executeQuery(getAllDataQuery);
+            while (rs.next()) {
+                customerModels.add(new CustomerModel(rs.getInt(1),rs.getString(2),rs.getString(3)));
+//                customerModels.add(new Models.InventoryModel(rs.getInt(1),rs.getString(2),rs.getInt(3),rs.getInt(4),rs.getString(5),rs.getString(6)));
+                //m1=new Models.Model(rs.getInt(1),rs.getInt(4),rs.getInt(3),rs.getString(2),rs.getString(5),rs.getString(6));
+            }
+            System.out.println("Lists");
+            for(int i=0;i<customerModels.size();i++){
+                System.out.println("Id : "+customerModels.get(i).getId());
+                System.out.println("Name : "+customerModels.get(i).getName());
+                System.out.println("Pan No : "+customerModels.get(i).getPanno());
+            }
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+        }
+        return customerModels;
+    }
+    public void insertTransferData(int item_id,int quantity,String branch){
+        createConnection();
+        try{
+            stmt.executeUpdate("INSERT INTO `transfer` (Item_ID,Branch,Quantity) VALUES ('"+item_id+"','"+branch+"','"+quantity+"');");
+            JOptionPane.showMessageDialog(null,"Your Inventory is Transferred ");
+            conn.close();
+        }catch (Exception e){
+        }
+
     }
 }

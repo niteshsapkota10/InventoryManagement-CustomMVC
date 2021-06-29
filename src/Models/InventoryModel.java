@@ -1,3 +1,5 @@
+package Models;
+
 public class InventoryModel {
     private int id;
     private String itemName;

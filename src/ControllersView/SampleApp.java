@@ -1,17 +1,25 @@
+package ControllersView;
+
+import Models.CustomerModel;
+import Models.Model;
+import Models.UserModel;
+import Repository.DataBase;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.time.LocalDateTime;
-import java.time.chrono.JapaneseDate;
 import java.util.ArrayList;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 
 public class SampleApp {
     //Initializing Components
     private int quantity;
-    private JFrame f,f2,createUserFrame,LoginFrame,editUserFrame,deleteUserFrame,editUserInterfaceFrame;
+    private JFrame f,f2,createUserFrame,LoginFrame,editUserFrame,deleteUserFrame,editUserInterfaceFrame,transferFrame;
     private JPanel dataEntry,dataList,footer;
     private JLabel idLabel,nameLabel,rateLabel,quantityLabel,expiryLabel,salableLabel,customerLabel,customerNameLabel,customerPANLabel,usernameLabel,userAddressLabel,userContactLabel,userPasswordLabel,userconfirmPasswordLabel;
     private JTextField nameInput,rateInput,idInput,quantityInput,expiryInput,customerNameInput,customerPANInput,userNameInput,userAddressInput,userContactInput,customerNameInput1,customerPANInput1;
@@ -28,6 +36,9 @@ public class SampleApp {
     private boolean loginStatus=false;
     private JComboBox yearCombo,monthCombo,dayCombo,panNoCombo;
     private JRadioButton alreadyUser,newUser;
+    private ArrayList<CustomerModel> customerModels=new ArrayList<>();
+    private ArrayList<String> pannos=new ArrayList<>();
+    private JTextField customerIdInput;
 
     //Constructor
     SampleApp(){
@@ -149,7 +160,6 @@ public class SampleApp {
         monthCombo.setBounds(180+insets.left,200+insets.top,monthCombo.getPreferredSize().width+20,monthCombo.getPreferredSize().height);
         dataEntry.add(monthCombo);
 
-
         String days[]=new String[30];
         for(int d=1;d<=30;d++){
             if(d<10){
@@ -228,20 +238,37 @@ public class SampleApp {
         bg.add(alreadyUser);
         bg.add(newUser);
 
-        if(alreadyUser.isSelected()){
-            customerNameInput1.setEditable(false);
-        }else if(newUser.isSelected()){
+        alreadyUser.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                if(alreadyUser.isSelected()){
+                    System.out.println("Already User Selected");
+                    customerNameInput.setEditable(false);
+                    customerPANInput1.setEditable(false);
+                    panNoCombo.setVisible(true);
+                }
+            }
+        });
 
-        }
-
+        newUser.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                if(newUser.isSelected()){
+                    System.out.println("New User Selected");
+                    panNoCombo.setVisible(false);
+                    customerNameInput.setEditable(true);
+                    customerPANInput1.setEditable(true);
+                }
+            }
+        });
 
         customerNameLabel=new JLabel("Customer Name");
         customerNameLabel.setBounds(20+insets.left,350+insets.top,customerNameLabel.getPreferredSize().width,customerNameLabel.getPreferredSize().height);
         dataEntry.add(customerNameLabel);
 
-        customerNameInput=new JTextField();
-        customerNameInput.setBounds(120+insets.left,350+insets.top,customerNameInput.getPreferredSize().width+100,customerNameInput.getPreferredSize().height);
-        dataEntry.add(customerNameInput);
+        customerNameInput1=new JTextField();
+        customerNameInput1.setBounds(120+insets.left,350+insets.top,customerNameInput1.getPreferredSize().width+100,customerNameInput1.getPreferredSize().height);
+        dataEntry.add(customerNameInput1);
 
         customerPANLabel=new JLabel("PAN NO : ");
         customerPANLabel.setBounds(230+insets.left,350+insets.top,customerPANLabel.getPreferredSize().width,customerPANLabel.getPreferredSize().height);
@@ -251,10 +278,30 @@ public class SampleApp {
         customerPANInput.setBounds(280+insets.left,350+insets.top,customerPANInput.getPreferredSize().width+100,customerPANInput.getPreferredSize().height);
 //        dataEntry.add(customerPANInput);
 
-        String Pannos[]={"A","B"};
-        panNoCombo=new JComboBox(Pannos);
+//        String Pannos[]={"A","B"};
+
+        db1=new DataBase();
+        customerModels=db1.getCustomersData();
+        int[] customerids=new int[customerModels.size()];
+        String[] customerNames=new String[customerModels.size()];
+        String[] pannos=new String[customerModels.size()];
+        for(int i=0;i<customerModels.size();i++){
+            customerids[i]= customerModels.get(i).getId();
+            customerNames[i]=customerModels.get(i).getName();
+            pannos[i]=customerModels.get(i).getPanno();
+        }
+        panNoCombo=new JComboBox(pannos);
         panNoCombo.setBounds(280+insets.left,350+insets.top,panNoCombo.getPreferredSize().width+100,panNoCombo.getPreferredSize().height);
         dataEntry.add(panNoCombo);
+
+        panNoCombo.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int panNoComboSelectedIndex=panNoCombo.getSelectedIndex();
+                customerNameInput1.setText(customerNames[panNoComboSelectedIndex]);
+                customerIdInput.setText(String.valueOf(customerids[panNoComboSelectedIndex]));
+            }
+        });
 
         customerLabel=new JLabel("New Customer Details");
         customerLabel.setBounds(20+insets.left,400+insets.top,customerLabel.getPreferredSize().width,customerLabel.getPreferredSize().height);
@@ -276,6 +323,9 @@ public class SampleApp {
         dataEntry.add(customerPANInput1);
         //Customer Ends
 
+        customerIdInput=new JTextField();
+        customerIdInput.setBounds(280+insets.left,600+insets.top,customerIdInput.getPreferredSize().width+100,customerIdInput.getPreferredSize().height);
+        dataEntry.add(customerIdInput);
         //Generate Bill Btn Starts
 
         generateBillBtn=new JButton("Generate Bill");
@@ -380,19 +430,32 @@ public class SampleApp {
         if(ModelList.size()==0){
             JOptionPane.showMessageDialog(null,"No Items In The Cart");
         }else{
-            if(customerNameInput.getText().equals("")){
-                JOptionPane.showMessageDialog(null,"Customer Name is Important ");
-            }else{
-                if(customerPANInput.getText().equals("")){
-                    JOptionPane.showMessageDialog(null,"Customer PAN No is Important");
+            if(alreadyUser.isSelected()){
+                System.out.println("Already user is selected ");
+                db1=new DataBase();
+                int id=Integer.parseInt(customerIdInput.getText());
+                db1.insertTransactionData2(id,ModelList,quantity);
+                JOptionPane.showMessageDialog(null,"Bill Generation Successfull");
+                ModelList.clear();
+                customerNameInput.setText("");
+                customerPANInput.setText("");
+                updateTable();
+            }else if(newUser.isSelected()){
+                System.out.println("New User is selected ");
+                if(customerNameInput.getText().equals("")){
+                    JOptionPane.showMessageDialog(null,"Customer Name is Important ");
                 }else{
-                    db1=new DataBase();
-                    db1.insertTransactionData(customerNameInput.getText(),customerPANInput.getText(),ModelList,quantity);
-                    JOptionPane.showMessageDialog(null,"Bill Generation Successfull");
-                    ModelList.clear();
-                    customerNameInput.setText("");
-                    customerPANInput.setText("");
-                    updateTable();
+                    if(customerPANInput.getText().equals("")){
+                        JOptionPane.showMessageDialog(null,"Customer PAN No is Important");
+                    }else{
+                        db1=new DataBase();
+                        db1.insertTransactionData(customerNameInput.getText(),customerPANInput.getText(),ModelList,quantity);
+                        JOptionPane.showMessageDialog(null,"Bill Generation Successfull");
+                        ModelList.clear();
+                        customerNameInput.setText("");
+                        customerPANInput.setText("");
+                        updateTable();
+                    }
                 }
             }
         }
@@ -519,7 +582,7 @@ public class SampleApp {
         transferBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setUpdateBtn();
+                setTransferFunction();
             }
         });
 
@@ -578,7 +641,49 @@ public class SampleApp {
     }
 
     //This function performs action on Update Button
-    void setUpdateBtn(){
+    void setTransferFunction(){
+        transferFrame=new JFrame("Transfer Inventory");
+        transferFrame.setSize(450,300);
+        transferFrame.setVisible(true);
+        transferFrame.setDefaultCloseOperation(1);
+        transferFrame.setLayout(null);
+
+        JLabel itemToTransfer=new JLabel("Item ID : ");
+        itemToTransfer.setBounds(100,25,50,25);
+        transferFrame.add(itemToTransfer);
+        JTextField itemToTransferIdInput=new JTextField();
+        itemToTransferIdInput.setBounds(200,25,100,25);
+        transferFrame.add(itemToTransferIdInput);
+
+        JLabel branchTransfer=new JLabel("Branch : ");
+        branchTransfer.setBounds(100,60,50,25);
+        transferFrame.add(branchTransfer);
+
+        String branches[]={"Kathmandu","PKR","MNR"};
+        JComboBox branchesCombo=new JComboBox(branches);
+        branchesCombo.setBounds(200,60,100,25);
+        transferFrame.add(branchesCombo);
+
+
+        JLabel quantity=new JLabel("Quantity : ");
+        quantity.setBounds(100,90,60,25);
+        transferFrame.add(quantity);
+        JTextField itemQuantityIp=new JTextField();
+        itemQuantityIp.setBounds(200,90,100,25);
+        transferFrame.add(itemQuantityIp);
+
+        JButton transfer=new JButton("Transfer");
+        transfer.setBounds(120,120,150,25);
+        transferFrame.add(transfer);
+
+        transfer.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DataBase db1=new DataBase();
+                db1.insertTransferData(Integer.parseInt(itemToTransferIdInput.getText()),Integer.parseInt(itemQuantityIp.getText()),branchesCombo.getSelectedItem().toString());
+            }
+        });
+
     }
 
     //This function performs action on Delete Button
