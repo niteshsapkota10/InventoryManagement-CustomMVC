@@ -445,15 +445,15 @@ public class SampleApp {
                 if(customerNameInput.getText().equals("")){
                     JOptionPane.showMessageDialog(null,"Customer Name is Important ");
                 }else{
-                    if(customerPANInput.getText().equals("")){
+                    if(customerPANInput1.getText().equals("")){
                         JOptionPane.showMessageDialog(null,"Customer PAN No is Important");
                     }else{
                         db1=new DataBase();
-                        db1.insertTransactionData(customerNameInput.getText(),customerPANInput.getText(),ModelList,quantity);
+                        db1.insertTransactionData(customerNameInput.getText(),customerPANInput1.getText(),ModelList,quantity);
                         JOptionPane.showMessageDialog(null,"Bill Generation Successfull");
                         ModelList.clear();
                         customerNameInput.setText("");
-                        customerPANInput.setText("");
+                        customerPANInput1.setText("");
                         updateTable();
                     }
                 }
